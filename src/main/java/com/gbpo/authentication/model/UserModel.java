@@ -1,16 +1,17 @@
 package com.gbpo.authentication.model;
 
 
+import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Created by Shoaib on 16/02/2018.
@@ -43,5 +44,6 @@ public class UserModel implements Serializable {
     @Enumerated(EnumType.STRING)
     private  UserStatus userStatus = UserStatus.CREATED;
     private boolean archived = false;
+
 
 }

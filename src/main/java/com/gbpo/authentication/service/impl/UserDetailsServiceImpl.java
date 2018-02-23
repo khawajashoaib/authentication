@@ -1,5 +1,7 @@
 package com.gbpo.authentication.service.impl;
 
+import static java.util.Collections.emptyList;
+
 import com.gbpo.authentication.model.UserModel;
 import com.gbpo.authentication.model.UserStatus;
 import com.gbpo.authentication.repository.UserRepository;
@@ -9,8 +11,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import static java.util.Collections.emptyList;
 
 /**
  * Created by Shoaib on 16/02/2018.
@@ -29,7 +29,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         String email = appUserDetail[0].toString();
         String companyId = appUserDetail[1].toString();
         //System.out.println("username is : " + userName+  "CompanyId is : "+  companyId);
-        UserModel applicationUser = userRepository.findByEmailAndCompanyIdAndUserStatusAndArchivedFalse(email, companyId, UserStatus.ACTIVE.toString());
+        UserModel applicationUser = userRepository.findByEmailAndCompanyIdAndUserStatusAndArchivedFalse(email, companyId, UserStatus.ACTIVE);
         if (applicationUser == null) {
             throw new UsernameNotFoundException(username);
         }

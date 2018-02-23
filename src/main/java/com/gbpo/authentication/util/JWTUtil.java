@@ -1,13 +1,12 @@
 package com.gbpo.authentication.util;
 
 import com.gbpo.authentication.filter.SecurityConstants;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
-
 import java.io.UnsupportedEncodingException;
+import java.sql.Timestamp;
 import java.util.Date;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by Shoaib on 19/02/2018.
@@ -26,6 +25,19 @@ public class JWTUtil {
         }
         catch (ExpiredJwtException expiredToken) {
             System.out.println(" Expired Token Exception " + expiredToken.getClaims().getExpiration());
+        }
+        return null;
+    }
+
+    public static String getUserNameFromRequest(HttpServletRequest request) {
+        String token = request.getHeader(SecurityConstants.HEADER_STRING);
+        try {
+            return Jwts.parser()
+                .setSigningKey(SecurityConstants.SECRET.getBytes("UTF-8"))
+                .parseClaimsJws(token.replace(SecurityConstants.TOKEN_PREFIX, ""))
+                .getBody().getSubject();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
         return null;
     }

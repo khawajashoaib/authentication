@@ -1,12 +1,11 @@
 package com.gbpo.authentication.util;
 
 import com.gbpo.authentication.filter.SecurityConstants;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.Assert;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Created by Shoaib on 16/02/2018.
