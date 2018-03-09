@@ -15,6 +15,7 @@ import com.gbpo.authentication.AuthenticationApplication;
 import com.gbpo.authentication.bo.UserBO;
 import com.gbpo.authentication.filter.SecurityConstants;
 import com.gbpo.authentication.service.UserAuthService;
+import com.gbpo.authentication.util.JWTUtil;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.io.UnsupportedEncodingException;
@@ -61,7 +62,7 @@ public class UserControllerTest {
   @Test
   public void test_addUser_success() throws Exception {
     given(userServiceMock.addUser(userBO)).willReturn("1");
-    String token = SecurityConstants.TOKEN_PREFIX + " " + this.createToken("khawaja");
+    String token = SecurityConstants.TOKEN_PREFIX + " " + JWTUtil.createToken("khawaja");
     mockMvc.perform(
             post("/api/adduser")
                 .header("Content-Type", "application/json")
@@ -88,7 +89,7 @@ public class UserControllerTest {
 
   @Test
   public void test_addUser_throwsException_UserIsNull() throws Exception {
-    String token = SecurityConstants.TOKEN_PREFIX + " " + this.createToken("khawaja");
+    String token = SecurityConstants.TOKEN_PREFIX + " " + JWTUtil.createToken("khawaja");
     UserBO userBO = new UserBO();
     mockMvc.perform(
         post("/api/adduser")
@@ -99,17 +100,5 @@ public class UserControllerTest {
         .andExpect(status().isBadRequest());
   }
 
-  public String createToken(String username) {
-    String jwt = null;
-    try {
-      jwt = Jwts.builder()
-      .setSubject(username)
-      .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
-      .signWith(SignatureAlgorithm.HS512, SecurityConstants.SECRET.getBytes("UTF-8"))
-      .compact();
-    } catch (UnsupportedEncodingException e) {
-      e.printStackTrace();
-    }
-    return jwt;
-  }
+
 }

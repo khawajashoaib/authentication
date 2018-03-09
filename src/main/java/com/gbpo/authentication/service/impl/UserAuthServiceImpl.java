@@ -7,9 +7,11 @@ import com.gbpo.authentication.repository.UserRepository;
 import com.gbpo.authentication.service.UserAuthService;
 import com.gbpo.authentication.util.CommonConstants;
 import com.gbpo.authentication.util.CommonUtil;
+import com.gbpo.authentication.util.JWTUtil;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -43,11 +45,10 @@ public class UserAuthServiceImpl implements UserAuthService {
   public String addUser(UserBO userModel) {
     Assert.notNull(userModel.getEmail(), CommonConstants.NULL_EMAIL);
     Assert.notNull(userModel.getCompanyId(), CommonConstants.NULL_COMPANYID);
-    //check if username already exists
-    if (this.findByEmailAndCompanyId(userModel.getEmail(), userModel.getCompanyId()) == null) {
-      return String.valueOf(repository.save(customiseUser(userModel)).getId());
+    if (findByEmailAndCompanyId(userModel.getEmail(), userModel.getCompanyId()) == null) {
+      UserModel model = repository.save(customiseUser(userModel));
+      return String.valueOf(model.getId());
     }
-    //if not
     return CommonConstants.USER_ALREADY_EXISTS;
   }
 
@@ -58,7 +59,7 @@ public class UserAuthServiceImpl implements UserAuthService {
     String response = CommonConstants.USER_NOT_FOUND;
     try {
       UserModel userModelDb = findByEmailAndCompanyIdAndUserStatusAndArchivedFalse(model.getEmail(),
-          model.getCompanyId());
+          model.getCompanyId(), UserStatus.CREATED);
       Assert.notNull(userModelDb, response);
       if (userModelDb.getUrlToken().equals(model.getUrlToken())) {
         response = checkTokenExpiryAndActiveUser(userModelDb);
@@ -74,20 +75,47 @@ public class UserAuthServiceImpl implements UserAuthService {
 
   @Override
   public UserModel findByEmailAndCompanyIdAndUserStatusAndArchivedFalse(String email,
-      String companyId) {
+      String companyId, UserStatus userStatus) {
     Assert.notNull(email, CommonConstants.NULL_EMAIL);
     Assert.notNull(companyId, CommonConstants.NULL_COMPANYID);
     return repository.findByEmailAndCompanyIdAndUserStatusAndArchivedFalse(email, companyId,
-        UserStatus.CREATED);
+        userStatus);
+  }
+
+  @Override
+  public String refreshToken(HttpServletRequest request) {
+    String token = JWTUtil.getTokenFromRequest(request);
+    if (!isUserValid(JWTUtil.getUserNameFromRequest(token))) {
+      return CommonConstants.USER_NOT_FOUND;
+    }
+    return refreshToken(token);
+  }
+
+  public String refreshToken(String token) {
+    if (JWTUtil.checkTokenTimeValidity(token)) {
+      return JWTUtil.createRefreshToken(token);
+    }
+    return CommonConstants.EXPIRED_TOKEN;
+  }
+
+
+  public boolean isUserValid(String userName) {
+    Assert.notNull(userName, CommonConstants.USERNAME_IS_NULL);
+    String[] userNameArray = userName.split(",");
+    String email = userNameArray[0];
+    String companyId = userNameArray[1];
+    return
+        (findByEmailAndCompanyIdAndUserStatusAndArchivedFalse(email, companyId, UserStatus.ACTIVE)
+            != null) ? true : false;
   }
 
   public String checkTokenExpiryAndActiveUser(UserModel userModel) {
-    Assert.notNull(userModel.getTokenExpiry(), CommonConstants.NULl_EXPIRY_DATE);
+    Assert.notNull(userModel.getTokenExpiry(), CommonConstants.NULL_EXPIRY_DATE);
     if (Timestamp.valueOf(userModel.getTokenExpiry()).compareTo(new Date()) == 1) {
       userModel.setUserStatus(UserStatus.ACTIVE);
       return activeUserAccount(userModel);
     }
-    return CommonConstants.TOKEN_EXPIRE;
+    return CommonConstants.EXPIRED_TOKEN;
   }
 
   public String activeUserAccount(UserModel userModel) {
@@ -115,6 +143,6 @@ public class UserAuthServiceImpl implements UserAuthService {
 
   public void createTokenExpiry(UserBO userObj) {
     userObj
-        .setTokenExpiry(new Timestamp(System.currentTimeMillis() + CommonUtil.ONE_DAY).toString());
+        .setTokenExpiry(new Timestamp(System.currentTimeMillis() + JWTUtil.ONE_DAY).toString());
   }
 }
